@@ -1,0 +1,15 @@
+---
+- name: Upload local user's public key for SSH
+  authorized_key:
+    user: "{{ansible_user}}"
+    key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+- name: Run uberspace-add-domain
+  shell: uberspace-add-domain -w -d {{item}}
+  with_items: domains
+  ignore_errors: yes
+
+- name: Enable Strict Transport Security
+  shell: uberspace-configure-webserver enable hsts
+  register: result
+  changed_when: "'new configuration will be live' in result.stdout"

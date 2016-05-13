@@ -1,0 +1,34 @@
+---
+- name: Run uberspace-letsencrypt
+  shell: uberspace-letsencrypt creates=~/.config/letsencrypt/cli.ini
+
+- name: Add domains to ~/.config/letsencrypt/cli.ini
+  lineinfile:
+    dest: ~/.config/letsencrypt/cli.ini
+    line: domains = {{ domains | join(',') }}
+    regexp: ^domains\s*=
+
+- name: Add agree-tos and renew-by-default to ~/.config/letsencrypt/cli.ini
+  lineinfile:
+    dest: ~/.config/letsencrypt/cli.ini
+    line: "{{item}}"
+  with_items:
+    - "agree-tos = True"
+    - "renew-by-default = True"
+
+- name: Create script ~/bin/letsencrypt-renew
+  template:
+    src : templates/letsencrypt-renew.j2
+    dest: ~/bin/letsencrypt-renew
+    mode: ugo+x
+
+- name: Create cron job for ~/bin/letsencrypt-renew
+  cron:
+    name: letsencrypt-renew
+    job: ~/bin/letsencrypt-renew
+    special_time: daily
+
+- name: Run ~/bin/letsencrypt-renew to create certificates now
+  shell: ~/bin/letsencrypt-renew
+  register: result
+  changed_when: "'Done renewing certificates.' in result.stdout"
