@@ -1,0 +1,3 @@
+host_vars/*
+!host_vars/UBERSPACE_NAME.UBERSPACE_HOST.uberspace.de.example
+uberspaces
