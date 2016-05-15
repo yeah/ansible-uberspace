@@ -28,7 +28,7 @@
     job: ~/bin/letsencrypt-renew
     special_time: daily
 
-- name: Run ~/bin/letsencrypt-renew to create certificates now
+- name: Run ~/bin/letsencrypt-renew for the first time
   shell: ~/bin/letsencrypt-renew
   register: result
   changed_when: "'Done renewing certificates.' in result.stdout"
