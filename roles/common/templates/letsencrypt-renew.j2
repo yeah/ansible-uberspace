@@ -1,4 +1,6 @@
 #!/bin/bash
+# {{ ansible_managed }}
+
 PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin
 
 openssl x509 -checkend 864000 -in ~/.config/letsencrypt/live/{{ domains[0] }}/cert.pem > /dev/null
