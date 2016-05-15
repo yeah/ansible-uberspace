@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+
+[user]
+  name = {{ ansible_user }}
+  email = {{ ansible_user }}@{{ ansible_fqdn }}
+
+[color]
+  ui = true
+
+[core]
+  editor = vim
+
+[push]
+  default = current

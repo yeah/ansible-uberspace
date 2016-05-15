@@ -4,6 +4,11 @@
     user: "{{ansible_user}}"
     key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
 
+- name: Configure Git
+  template:
+    src: templates/gitconfig.j2
+    dest: ~/.gitconfig
+
 - name: Run uberspace-add-domain
   shell: uberspace-add-domain -w -d {{item}}
   with_items: domains
