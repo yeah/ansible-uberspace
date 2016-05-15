@@ -1,0 +1,10 @@
+#!/bin/sh
+# {{ ansible_managed }}
+
+for wp in /var/www/virtual/$USER/wordpress/*; do
+  cd $wp
+  git stash &> /dev/null
+  git pull --rebase origin master &> /dev/null
+  git stash pop &> /dev/null
+  ~/bin/composer -q -n update
+done
