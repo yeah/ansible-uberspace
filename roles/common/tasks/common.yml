@@ -18,3 +18,9 @@
   shell: uberspace-configure-webserver enable hsts
   register: result
   changed_when: "'new configuration will be live' in result.stdout"
+
+- name: Create ~/www symlink
+  file:
+    path: ~/www
+    src: /var/www/virtual/{{ ansible_user }}/
+    state: link
