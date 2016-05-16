@@ -6,4 +6,5 @@ for wp in /var/www/virtual/$USER/wordpress/*; do
   git fetch origin
   git reset --hard --quiet origin/master
   ~/bin/composer -q -n update
+  ~/bin/wp core update-db --quiet
 done
