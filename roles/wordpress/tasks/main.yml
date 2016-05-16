@@ -38,7 +38,7 @@
 - name: Create cron job for ~/bin/wp cli update
   cron:
     name: WP-CLI self-update
-    job: ~/bin/wp cli update --yes
+    job: ~/bin/wp cli update --yes --quiet
     special_time: daily
 
 
