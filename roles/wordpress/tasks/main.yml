@@ -93,6 +93,17 @@
 - name: Run ~/bin/wordpress-update for the first time
   shell: ~/bin/wordpress-update
 
+- name: Set up .htaccess to redirect all traffic to main domain
+  blockinfile:
+    dest: /var/www/virtual/{{ ansible_user }}/wordpress/{{ item.name }}/web/.htaccess
+    create: yes
+    insertbefore: BOF
+    block: |
+      RewriteEngine On
+      RewriteCond %{HTTP_HOST} !={{ item.domains[0] }}
+      RewriteRule (.*) https://{{ item.domains[0] }}/$1 [R=301,L]
+  with_items: wordpress_instances
+
 - name: Create domain symlinks for wordpresses
   file:
     path: /var/www/virtual/{{ ansible_user }}/{{ item.1 }}
