@@ -4,6 +4,6 @@
 for wp in /var/www/virtual/$USER/wordpress/*; do
   cd $wp
   git fetch origin
-  git reset --hard origin/master
+  git reset --hard --quiet origin/master
   ~/bin/composer -q -n update
 done
