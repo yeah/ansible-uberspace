@@ -5,6 +5,6 @@ domains:
   - blog.example.com
 wordpress_instances:
   - name: example_blog
-    bedrock_repo: https://github.com/roots/bedrock.git
+    bedrock_repo: https://github.com/yeah/bedrock.git
     domains:
       - blog.example.com
