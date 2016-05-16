@@ -3,3 +3,4 @@
   roles:
     - role: common
     - role: wordpress
+      when: wordpress_instances is defined
