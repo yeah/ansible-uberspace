@@ -47,7 +47,7 @@
     repo: "{{ item.bedrock_repo }}"
     dest: /var/www/virtual/{{ ansible_user }}/wordpress/{{ item.name }}
     force: yes
-  with_items: wordpress_instances
+  with_items: '{{ wordpress_instances }}'
 
 - name: Create MySQL database(s)
   mysql_db:
@@ -55,7 +55,7 @@
     collation: utf8_unicode_ci
     encoding: utf8
     state: present
-  with_items: wordpress_instances
+  with_items: '{{ wordpress_instances }}'
 
 - name: Create .env template with salts
   shell: ~/bin/wp dotenv init --with-salts
@@ -64,7 +64,7 @@
   ignore_errors: yes
   register: result
   changed_when: "'already exists' not in result.stdout"
-  with_items: wordpress_instances
+  with_items: '{{ wordpress_instances }}'
 
 - name: Read MySQL database password from ~/.my.cnf
   shell: sed -n -e '/\[client\]/,$p' ~/.my.cnf | grep password | head -1 | cut -d= -f2 | cut -d " " -f1 warn=no
@@ -80,7 +80,7 @@
          ~/bin/wp dotenv set WP_SITEURL  ${WP_HOME}/wp"
   args:
     chdir: /var/www/virtual/{{ ansible_user }}/wordpress/{{ item.name }}
-  with_items: wordpress_instances
+  with_items: '{{ wordpress_instances }}'
 
 - name: Create script ~/bin/wordpress-update
   template:
@@ -100,7 +100,7 @@
       RewriteEngine On
       RewriteCond %{HTTP_HOST} !={{ item.domains[0] }}
       RewriteRule (.*) https://{{ item.domains[0] }}/$1 [R=301,L]
-  with_items: wordpress_instances
+  with_items: '{{ wordpress_instances }}'
 
 - name: Create domain symlinks for wordpresses
   file:

@@ -11,7 +11,7 @@
 
 - name: Run uberspace-add-domain
   shell: uberspace-add-domain -w -d {{item}}
-  with_items: domains
+  with_items: '{{ domains }}'
   ignore_errors: yes
 
 - name: Enable Strict Transport Security
