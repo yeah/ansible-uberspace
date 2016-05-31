@@ -32,7 +32,7 @@ Nothing to do or configure here. This works automagically for all your domains.
 ### WordPress
 
 1. To setup a WordPress instance, simply create an entry under `wordpress_instances` in your `host_vars` file (see `host_vars/UBERSPACE_NAME.UBERSPACE_HOST.uberspace.de.example` for an example)
-2. Use the default `bedrock_repo` from `https://github.com/roots/bedrock.git` or use your own forked repo of the boilerplate
+2. Use the default `bedrock_repo` from `https://github.com/roots/bedrock.git` or use your own forked repo of the boilerplate (make sure your Uberspace can access your Git host in that case)
 3. Add the domains through which your WordPress should be accessible
 4. Make sure to add these domains to the top-level `domains` section in the `host_vars` file as well!
 
