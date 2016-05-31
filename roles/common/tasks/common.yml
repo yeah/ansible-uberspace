@@ -4,6 +4,12 @@
     user: "{{ansible_user}}"
     key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
 
+- name: Generate SSH key pair for remote user on Uberspace
+  user: name={{ ansible_user }} generate_ssh_key=yes ssh_key_bits=4096 ssh_key_file=.ssh/id_rsa
+
+- name: Fetch remote user's public key (e.g. for Git access)
+  fetch: src=~/.ssh/id_rsa.pub dest=public_keys/{{ ansible_host }} flat=yes
+
 - name: Configure Git
   template:
     src: templates/gitconfig.j2

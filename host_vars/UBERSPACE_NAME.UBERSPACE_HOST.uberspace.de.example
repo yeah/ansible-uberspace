@@ -5,9 +5,14 @@ domains:
   - blog.example.com
 wordpress_instances:
   - name: example_blog
-    bedrock_repo: https://github.com/yeah/bedrock.git
     domains:
       - blog.example.com
+
+    # Fork this repo and adapt to your requirements. Make sure to add your
+    # Uberspace's public SSH key as a "deploy key" to your Git repo. The
+    # playbook will download your Uberspace's public keys to the public_keys/
+    # dir for you.
+    bedrock_repo: https://github.com/yeah/bedrock.git
 
     # For deployments via webhooks. Your webhook URL will be:
     # https://UBERSPACE_NAME.UBERSPACE_HOST.uberspace.de/cgi-bin/wordpress-update-example_blog.cgi?secretsauce123
