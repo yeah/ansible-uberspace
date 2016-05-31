@@ -55,7 +55,7 @@ A simple post-receive hook on your Git server could look like this, it would hav
 curl -s 'https://julia.eridanus.uberspace.de/cgi-bin/wordpress-update-example_blog.cgi?secretsauce123'
 ```
 
-Or if you use [Planio](https://plan.io), simply enter your URL via **Settings** -> **Repositories** -> *your repo* -> **Edit** -> **Post-Receive webhook URL**
+Or if you use [Planio](https://plan.io), simply enter your URL via **Settings** &rarr; **Repositories** &rarr; *your repo* &rarr; **Edit** &rarr; **Post-Receive webhook URL**
 
 ## License
 
