@@ -1,0 +1,7 @@
+---
+- hosts: all
+  tasks:
+  - name: Remove cron job for ~/bin/wordpress-update
+    cron:
+      name: WordPress update
+      state: absent

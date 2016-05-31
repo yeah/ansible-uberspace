@@ -1,21 +1,8 @@
 #!/bin/sh
 # {{ ansible_managed }}
 
-export PATH=$PATH:/package/host/localhost/php/bin
-export HOME=/home/{{ ansible_user }}
-
-function update_wordpress {
-  cd $1
-  git fetch origin
-  git reset --hard --quiet origin/master
-  ~/bin/composer -q -n update
-  ~/bin/wp core update-db --quiet
-}
-
-if [ $# -eq 0 ]; then
-  for wp in /var/www/virtual/{{ ansible_user }}/wordpress/*; do
-    update_wordpress $wp
-  done
-else
-  update_wordpress $1
-fi
+cd "/var/www/virtual/{{ ansible_user }}/wordpress/$1"
+git fetch origin
+git reset --hard --quiet origin/master
+~/bin/composer -q -n update
+~/bin/wp core update-db --quiet

@@ -19,6 +19,11 @@
   register: result
   changed_when: "'new configuration will be live' in result.stdout"
 
+- name: Enable daemontools
+  shell: uberspace-setup-svscan
+  args:
+    creates: ~/service
+
 - name: Create ~/www symlink
   file:
     path: ~/www

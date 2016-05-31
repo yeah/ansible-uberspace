@@ -88,14 +88,30 @@
     dest: ~/bin/wordpress-update
     mode: ugo+x
 
-- name: Run ~/bin/wordpress-update for the first time
-  shell: ~/bin/wordpress-update
+- name: Create runwhen jobs for ~/bin/wordpress-update
+  shell: 'runwhen-conf ~/etc/run-wordpress-update-{{ item.name }} ~/bin/wordpress-update {{ item.name }}'
+  args:
+    creates: '~/etc/run-wordpress-update-{{ item.name }}/run'
+  with_items: '{{ wordpress_instances }}'
 
-- name: Create cron job for ~/bin/wordpress-update
-  cron:
-    name: WordPress update
-    job: ~/bin/wordpress-update
-    special_time: daily
+- name: Configure runwhen jobs for ~/bin/wordpress-update
+  lineinfile:
+  args:
+    dest: ~/etc/run-wordpress-update-{{ item.name }}/run
+    regexp: '^RUNWHEN='
+    line: 'RUNWHEN=",H=1"'
+  with_items: '{{ wordpress_instances }}'
+
+- name: Activate runwhen jobs for ~/bin/wordpress-update
+  file:
+    path: '~/service/wordpress-update-{{ item.name }}'
+    src: '~/etc/run-wordpress-update-{{ item.name }}'
+    state: link
+  with_items: '{{ wordpress_instances }}'
+
+- name: Run wordpress-update for the first time
+  shell: 'svc -a ~/service/wordpress-update-{{ item.name }}'
+  with_items: '{{ wordpress_instances }}'
 
 - name: Create webhook for WordPress updates
   template:
