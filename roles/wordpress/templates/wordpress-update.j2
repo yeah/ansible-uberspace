@@ -1,6 +1,9 @@
 #!/bin/sh
 # {{ ansible_managed }}
 
+export PATH=$PATH:/package/host/localhost/php/bin
+export HOME=/home/{{ ansible_user }}
+
 function update_wordpress {
   cd $1
   git fetch origin
@@ -10,7 +13,7 @@ function update_wordpress {
 }
 
 if [ $# -eq 0 ]; then
-  for wp in /var/www/virtual/$USER/wordpress/*; do
+  for wp in /var/www/virtual/{{ ansible_user }}/wordpress/*; do
     update_wordpress $wp
   done
 else
