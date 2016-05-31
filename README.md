@@ -57,6 +57,12 @@ curl -s 'https://julia.eridanus.uberspace.de/cgi-bin/wordpress-update-example_bl
 
 Or if you use [Planio](https://plan.io), simply enter your URL via **Settings** &rarr; **Repositories** &rarr; *your repo* &rarr; **Edit** &rarr; **Post-Receive webhook URL**
 
+### Cleanup
+
+As the Uberspace Playbook is still in development, it would make sense for you to run the cleanup tasks after every update from this repo. The cleanup tasks remove any files/configurations on your Uberspace which previous versions of the playbook may have installed but which are no longer needed. You can run the cleanup tasks like so:
+
+`ansible-playbook cleanup.yml`
+
 ## License
 
 MIT.
