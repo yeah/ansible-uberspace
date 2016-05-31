@@ -84,7 +84,7 @@
 
 - name: Create script ~/bin/wordpress-update
   template:
-    src : templates/wordpress-update.j2
+    src: templates/wordpress-update.j2
     dest: ~/bin/wordpress-update
     mode: ugo+x
 
