@@ -1,0 +1,13 @@
+#!/bin/sh
+# {{ ansible_managed }}
+
+echo 'Content-type: text/plain'
+
+if [ "${QUERY_STRING}" ==  "{{ item.webhook_key }}" ]; then
+  echo "Status: 200 OK"; echo
+  ~/bin/wordpress-update ~/www/wordpress/{{ item.name }} &>/dev/null
+  echo "OK. Exit code: $?"
+else
+  echo "Status: 403 Forbidden"; echo
+  echo "Wrong key."
+fi

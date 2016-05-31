@@ -8,3 +8,7 @@ wordpress_instances:
     bedrock_repo: https://github.com/yeah/bedrock.git
     domains:
       - blog.example.com
+
+    # For deployments via webhooks. Your webhook URL will be:
+    # https://UBERSPACE_NAME.UBERSPACE_HOST.uberspace.de/cgi-bin/wordpress-update-example_blog.cgi?secretsauce123
+    webhook_key: secretsauce123

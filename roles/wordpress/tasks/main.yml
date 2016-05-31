@@ -97,6 +97,14 @@
     job: ~/bin/wordpress-update
     special_time: daily
 
+- name: Create webhook for WordPress updates
+  template:
+    src: templates/wordpress-update.cgi.j2
+    dest: "~/cgi-bin/wordpress-update-{{ item.name }}.cgi"
+    mode: 0755
+  when: '{{ item.webhook_key is defined }}'
+  with_items: '{{ wordpress_instances }}'
+
 - name: Set up .htaccess to redirect all traffic to main domain
   blockinfile:
     dest: /var/www/virtual/{{ ansible_user }}/wordpress/{{ item.name }}/web/.htaccess
