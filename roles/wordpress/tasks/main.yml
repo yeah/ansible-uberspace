@@ -91,6 +91,12 @@
 - name: Run ~/bin/wordpress-update for the first time
   shell: ~/bin/wordpress-update
 
+- name: Create cron job for ~/bin/wordpress-update
+  cron:
+    name: WordPress update
+    job: ~/bin/wordpress-update
+    special_time: daily
+
 - name: Set up .htaccess to redirect all traffic to main domain
   blockinfile:
     dest: /var/www/virtual/{{ ansible_user }}/wordpress/{{ item.name }}/web/.htaccess
