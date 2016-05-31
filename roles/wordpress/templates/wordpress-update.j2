@@ -1,10 +1,18 @@
 #!/bin/sh
 # {{ ansible_managed }}
 
-for wp in /var/www/virtual/$USER/wordpress/*; do
-  cd $wp
+function update_wordpress {
+  cd $1
   git fetch origin
   git reset --hard --quiet origin/master
   ~/bin/composer -q -n update
   ~/bin/wp core update-db --quiet
-done
+}
+
+if [ $# -eq 0 ]; then
+  for wp in /var/www/virtual/$USER/wordpress/*; do
+    update_wordpress $wp
+  done
+else
+  update_wordpress $1
+fi
