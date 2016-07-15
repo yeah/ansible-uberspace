@@ -3,7 +3,7 @@
 
 PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin
 
-openssl x509 -checkend 1296000 -in ~/.config/letsencrypt/live/{{ domains[0] }}/cert.pem > /dev/null
+openssl x509 -checkend 1728000 -in ~/.config/letsencrypt/live/{{ domains[0] }}/cert.pem > /dev/null
 
 if [ $? != 0 ]; then
 	# run let's encrypt
