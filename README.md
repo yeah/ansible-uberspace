@@ -87,17 +87,50 @@ To actually deploy your app, we're going to use [Capistrano](http://capistranorb
 1. Add or uncomment `require 'capistrano/bundler'`
 2. Add or uncomment `require 'capistrano/rails/migrations'` if your app is using MySQL
 
+Your `Capfile` should now look similar to this:
+
+```ruby
+require "capistrano/setup"
+require "capistrano/deploy"
+require 'capistrano/bundler'
+require 'capistrano/rails/migrations'
+
+Dir.glob("lib/capistrano/tasks/*.rake").each { |r| import r }
+```
+
 ###### Modify your `config/deploy.rb`
 
 1. Find the line `set :application, 'my_app_name'` and replace `my_app_name` with the *exact same* name you chose earlier for the `rails_apps` entry in your `host_vars` file.  
 2. Find the line `set :repo_url, 'git@example.com:me/my_repo.git'` and add your Rails app's repo URL. If your repo is private, please add the keys you find in `public_keys/` within your playbook as deploy keys to your repository hoster.
 3. Find the line `# set :deploy_to, '/var/www/my_app_name'`, uncomment it and set the value to `"~/www/rails/#{fetch :application}"` (notice the double quotes!)
 4. Add the line `set :linked_files, fetch(:linked_files, []).push('config/database.yml')`
-5. Add the line `after :publishing, :restart { execute :svc, "-du ~/service/rails-app-#{fetch :application}" }`
+5. Add the line `after :publishing, :restart { execute :svc, "-du ~/service/rails-app-#{fetch :application}" }` within the `namespace :deploy` block
+
+Your `config/deploy.rb` should now look similar to this:
+
+```ruby
+lock '3.5.0'
+
+set :application, 'example_app'
+set :repo_url, 'git@example.plan.io:example-app.git'
+set :deploy_to, "~/www/rails/#{fetch :application}"
+set :linked_files, fetch(:linked_files, []).push('config/database.yml')
+
+namespace :deploy do
+  after :publishing, :restart { execute :svc, "-du ~/service/rails-app-#{fetch :application}" }
+end
+```
+
 
 ##### Modify your `config/deploy/production.rb`
 
-1. Find and uncomment the line `# server 'example.com', user: 'deploy', roles: %w{app db web}, my_property: :my_value` and replace example.com with the hostname of your Uberspace, e.g. `eridanus.uberspace.de`
+1. Find and uncomment the line `# server 'example.com', user: 'deploy', roles: %w{app db web}, my_property: :my_value` and replace `example.com` with the hostname of your Uberspace, e.g. `eridanus.uberspace.de` and `deploy` with your Uberspace username.
+
+Your `config/deploy/production.rb` should now look similar to this:
+
+```ruby
+server 'eridanus.uberspace.de', user: 'julia', roles: %w{app db web}
+```
 
 That's it. You should be able to deploy your app using `bundle exec cap production deploy`. After some time, your Rails app should be humming nicely on your configured domain.
 
