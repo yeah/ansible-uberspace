@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+production:
+  adapter: mysql2
+  encoding: utf8
+  database: {{ ansible_user }}_{{ item.name }}
+  username: {{ ansible_user }}
+  password: {{ database_password.stdout }}

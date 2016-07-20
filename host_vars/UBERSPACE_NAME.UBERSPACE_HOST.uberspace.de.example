@@ -3,6 +3,7 @@ domains:
   - example.com
   - www.example.com
   - blog.example.com
+
 wordpress_instances:
   - name: example_blog
     domains:
@@ -17,3 +18,14 @@ wordpress_instances:
     # For deployments via webhooks. Your webhook URL will be:
     # https://UBERSPACE_NAME.UBERSPACE_HOST.uberspace.de/cgi-bin/wordpress-update-example_blog.cgi?secretsauce123
     webhook_key: secretsauce123
+
+rails_apps:
+  - name: example_app
+    domains:
+      - myapp.example.com
+
+    # generate a secure random string for this, e.g. by running `rake secret` in your app
+    secret_key_base: 0123456789abcdef
+
+    # choose a random free port on your Uberspace, between 32000 and 65000
+    port: 54321
