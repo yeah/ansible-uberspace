@@ -33,7 +33,7 @@
   args:
     creates: ~/.wp-cli/packages/vendor/{{ item }}
   with_items:
-    - aaemnnosttv/wp-cli-dotenv-command
+    - aaemnnosttv/wp-cli-dotenv-command:^0.2
 
 - name: Create cron job for ~/bin/wp cli update
   cron:
