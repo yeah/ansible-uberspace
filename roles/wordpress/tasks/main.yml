@@ -77,7 +77,7 @@
          ~/bin/wp dotenv set DB_PASSWORD {{ database_password.stdout }}; \
          ~/bin/wp dotenv set WP_ENV      production; \
          ~/bin/wp dotenv set WP_HOME     https://{{ item.domains[0] }}; \
-         ~/bin/wp dotenv set WP_SITEURL  ${WP_HOME}/wp"
+         ~/bin/wp dotenv set WP_SITEURL  https://{{ item.domains[0] }}/wp;"
   args:
     chdir: /var/www/virtual/{{ ansible_user }}/wordpress/{{ item.name }}
   with_items: '{{ wordpress_instances }}'
