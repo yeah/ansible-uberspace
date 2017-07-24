@@ -128,8 +128,8 @@
     insertbefore: BOF
     block: |
       RewriteEngine On
-      RewriteCond %{HTTP_HOST} !={{ item.domains[0] }}
-      RewriteRule (.*) https://{{ item.domains[0] }}/$1 [R=301,L]
+      RewriteCond %{HTTP_HOST} !={{ item.domains[0] | regex_replace('/.*') }}
+      RewriteRule (.*) https://{{ item.domains[0] | regex_replace('/.*') }}/$1 [R=301,L]
   with_items: '{{ wordpress_instances }}'
 
 - name: Create domain symlinks for wordpresses
