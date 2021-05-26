@@ -1,4 +1,2 @@
 ---
 - include: common.yml
-- include: letsencrypt.yml
-  when: domains is defined

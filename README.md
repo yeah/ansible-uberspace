@@ -2,11 +2,8 @@
 
 This playbook helps you set up and manage your Uberspace(s).
 
-It configures a few common things that I find essential for Uberspaces and it is extensible for other stuff.
-
 ## Current features
 
-- [Let's Encrypt SSL certificates](https://wiki.uberspace.de/webserver:https#let_s-encrypt-zertifikate)
 - [WordPress](https://wordpress.org/) using the awesome [Bedrock](https://roots.io/bedrock/) boilerplate
 - [Ruby on Rails](http://rubyonrails.org/) apps
 
@@ -25,10 +22,6 @@ It configures a few common things that I find essential for Uberspaces and it is
 6. Enjoy!
 
 If you have an SSH keypair and your public key is installed in `~/.ssh/id_rsa.pub` on your local computer, the key will be stored in `~/.ssh/authorized_keys` on your Uberspace and you won't need the `--ask-pass` argument in subsequent runs.
-
-### Let's Encrypt
-
-Nothing to do or configure here. This works automagically for all your domains.
 
 ### WordPress
 
