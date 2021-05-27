@@ -3,7 +3,7 @@
   authorized_key:
     user: "{{ ansible_env.USER }}"
     key: "{{ item }}"
-  with_items: upload_ssh_keys
+  with_items: "{{ upload_ssh_keys }}"
   when: upload_ssh_keys is defined and upload_ssh_keys
 
 - name: Generate SSH key pair for remote user on Uberspace
@@ -24,6 +24,10 @@
 #  template:
 #    src: templates/gitconfig.j2
 #    dest: ~/.gitconfig
+
+- name: "Already registered domains:"
+  debug:
+    msg: "{{ ansible_facts.ansible_local.users[ansible_env.USER].domains }}"
 
 - name: Add domains
   include_tasks: domains.yml

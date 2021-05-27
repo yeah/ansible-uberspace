@@ -4,14 +4,32 @@
   register: web_domain
   failed_when: web_domain.rc == 1 and web_domain.stderr != "Can't add domain to the configuration. It is already configured for your Uberspace account."
   changed_when: ("The webserver's configuration has been adapted." in web_domain.stdout_lines)
-  when: item.web or (item.web is not defined and item.mail is not defined)
+  notify:
+    - Report DNS entries
+  when:
+    - item.web or (item.web is not defined and item.mail is not defined)
+    - ansible_facts.ansible_local.users[ansible_env.USER].domains[item.name].web is not defined
+
+- name: "Remember web facts for {{ item.name }}"
+  set_fact:
+    web_domains: "{{ (web_domains | default([])) + [{'name': item.name, 'A': web_domain.stdout | regex_search('\\sA\\s+->\\s+([0-9.]+)'), 'AAAA': web_domain.stdout | regex_search('\\sAAAA\\s+->\\s+([a-f0-9:]+)')}] }}"
+  when: web_domain.changed
 
 - name: "Enable mail for {{ item.name }}"
   command: "uberspace mail domain add {{ item.name }}"
   register: mail_domain
   failed_when: mail_domain.rc == 1 and mail_domain.stderr != "Can't add domain to the configuration. It is already configured for your Uberspace account."
   changed_when: ("The mailserver's configuration has been adapted." in mail_domain.stdout_lines)
-  when: item.mail or (item.web is not defined and item.mail is not defined)
+  notify:
+    - Report DNS entries
+  when:
+    - item.mail or (item.web is not defined and item.mail is not defined)
+    - ansible_facts.ansible_local.users[ansible_env.USER].domains[item.name].mail is not defined
+
+- name: "Remember mail facts for {{ item.name }}"
+  set_fact:
+    mail_domains: "{{ (mail_domains | default([])) + [{'name': item.name, 'MX': mail_domain.stdout | regex_search('\\sMX\\s+->\\s+([^\n]+)'), 'TXT': mail_domain.stdout | regex_search('\\sTXT\\s+->\\s+([^\n]+)')}] }}"
+  when: mail_domain.changed
 
 - name: "Create symlink for {{ item.name }}"
   file:

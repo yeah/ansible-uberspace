@@ -1,1 +1,5 @@
 ---
+- name: Report DNS entries
+  debug:
+    msg: "{{ web_domains | default([]) | combine(mail_domains | default([]), recursive=true) }}"
+  listen: Report DNS entries
