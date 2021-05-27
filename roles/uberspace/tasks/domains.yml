@@ -1,18 +1,18 @@
 ---
 - name: "Enable web for {{ item.name }}"
   command: "uberspace web domain add {{ item.name }}"
-  #ignore_errors: yes
   register: web_domain
   failed_when: web_domain.rc == 1 and web_domain.stderr != "Can't add domain to the configuration. It is already configured for your Uberspace account."
   changed_when: ("The webserver's configuration has been adapted." in web_domain.stdout_lines)
   when: item.web or (item.web is not defined and item.mail is not defined)
+
 - name: "Enable mail for {{ item.name }}"
   command: "uberspace mail domain add {{ item.name }}"
-  #ignore_errors: yes
   register: mail_domain
   failed_when: mail_domain.rc == 1 and mail_domain.stderr != "Can't add domain to the configuration. It is already configured for your Uberspace account."
   changed_when: ("The mailserver's configuration has been adapted." in mail_domain.stdout_lines)
   when: item.mail or (item.web is not defined and item.mail is not defined)
+
 - name: "Create symlink for {{ item.name }}"
   file:
     path: ~/www

@@ -1,8 +1,10 @@
 ---
-#- name: Upload local user's public key for SSH
-#  authorized_key:
-#    user: "{{ ansible_env.USER }}"
-#    key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+- name: Upload local public key
+  authorized_key:
+    user: "{{ ansible_env.USER }}"
+    key: "{{ item }}"
+  with_items: upload_ssh_keys
+  when: upload_ssh_keys is defined and upload_ssh_keys
 
 - name: Generate SSH key pair for remote user on Uberspace
   user:
@@ -10,6 +12,7 @@
     generate_ssh_key: yes
     ssh_key_bits: 4096
     ssh_key_file: .ssh/id_rsa
+  when: generate_ssh_key
 
 #- name: Fetch remote user's public key (e.g. for Git access)
 #  fetch:

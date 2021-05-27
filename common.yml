@@ -1,8 +1,0 @@
----
-- hosts: all
-  roles:
-    - role: common
-    - role: wordpress
-      when: wordpress_instances is defined
-    - role: rails
-      when: rails_apps is defined

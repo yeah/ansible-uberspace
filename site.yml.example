@@ -1,0 +1,19 @@
+---
+- hosts: julia.eridanus.uberspace.de
+  roles:
+    - role: uberspace
+      vars:
+        upload_ssh_keys:
+          - "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+        generate_ssh_key: true
+        domains:
+          - name: example.com
+            web: true
+            mail: true
+            link: true
+          - name: www.example.com
+            web: true
+            link: true
+          - name: blog.example.com
+            web: true
+            link: true
