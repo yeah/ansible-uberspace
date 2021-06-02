@@ -5,7 +5,7 @@ This playbook helps you set up and manage your Uberspace(s).
 ## Current features
 
 - Registering domains for web and mail, and optionally symlinking docroot to the home directory
-- [WordPress](https://wordpress.org/) using the awesome [Bedrock](https://roots.io/bedrock/) boilerplate
+- [WordPress](https://wordpress.org/) using the [Bedrock](https://roots.io/bedrock/) boilerplate
 
 ## Requirements
 
@@ -15,20 +15,9 @@ This playbook helps you set up and manage your Uberspace(s).
 ## Usage
 
 1. Copy `uberspaces.example` to `uberspaces` and add your Uberspace host(s) and username(s)
-2. Copy `host_vars/UBERSPACE_NAME.UBERSPACE_HOST.uberspace.de.example` to a new file named without the `.example` suffix and replace `UBERSPACE_NAME` with your username, e.g. `julia` and `UBERSPACE_HOST` with your Uberspace host, e.g. `eridanus`.
-3. Add the domains you'd like to run on the respective Uberspace to the file created in step 2.
-4. Repeat steps 2 and 3 for all your Uberspaces.
-5. Run the playbook using `ansible-playbook --ask-pass site.yml`.
-6. Enjoy!
-
-If you have an SSH keypair and your public key is installed in `~/.ssh/id_rsa.pub` on your local computer, the key will be stored in `~/.ssh/authorized_keys` on your Uberspace and you won't need the `--ask-pass` argument in subsequent runs.
-
-### WordPress
-
-1. To set up a WordPress instance, simply create an entry under `wordpress_instances` in your `host_vars` file (see `host_vars/UBERSPACE_NAME.UBERSPACE_HOST.uberspace.de.example` for an example)
-2. Use the default `bedrock_repo` from `https://github.com/yeah/bedrock.git` or use your own forked repo of the boilerplate (Your Uberspace's public keys will be conveniently downloaded for you to `public_keys/` so you can use them as deploy keys for your private Git repos.)
-3. Add the domains through which your WordPress should be accessible
-4. Make sure to add these domains to the top-level `domains` section in the `host_vars` file as well!
+2. Copy `site.yml.example` to `site.yml` or any other playbook name you want and start adapting it to your needs
+3. The `uberspace` role handles uploading local ssh keys, generating a key for the managed machine and registering domains for web or mail against the uberspace host with an optional symlink to home
+4. The `uberspace_wordpress_bedrock` role installs wordpress bedrock, creating the database for it and linking the docroot of the instance to the specified entry points
 
 #### Bonus: Deploy hooks
 
@@ -51,12 +40,6 @@ curl -s 'https://julia.eridanus.uberspace.de/cgi-bin/wordpress-update-example_bl
 
 Or if you use [Planio](https://plan.io), simply enter your URL via **Settings** &rarr; **Repositories** &rarr; *your repo* &rarr; **Edit** &rarr; **Post-Receive webhook URL**
 
-### Cleanup
-
-As the Uberspace Playbook is still in development, it would make sense for you to run the cleanup tasks after every update from this repo. The cleanup tasks remove any files/configurations on your Uberspace which previous versions of the playbook may have installed but which are no longer needed. You can run the cleanup tasks like so:
-
-`ansible-playbook cleanup.yml`
-
 ## License
 
 MIT.
@@ -67,4 +50,6 @@ To contribute something you usually configure on your Uberspace, please fork thi
 
 ## Credits
 
-[I](http://jan.sh) built this. By myself. On my computer.
+[Jan](http://jan.sh) built this. By himself. On his computer.
+
+Then U7 came along with breaking changes and Peter Nerlich eventually tried to rewrite this for the new version. Though in the process, he self righteously changed stuff he deemed weird and removed some features he didn't use himself, completely destroying any backwards compatibility.
