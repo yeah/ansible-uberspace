@@ -17,3 +17,14 @@
           - name: blog.example.com
             web: true
             link: true
+    - role: uberspace_wordpress_bedrock
+      vars:
+        instances:
+          - name: example-blog
+            entry_points:
+              - blog.example.com
+              - www.example.com/blog/
+          - name: test
+            docroot: ~/test
+            bedrock_repo: https://github.com/yeah/bedrock.git
+            bedrock_version: master

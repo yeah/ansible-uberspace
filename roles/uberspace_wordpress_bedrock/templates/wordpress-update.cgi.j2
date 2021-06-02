@@ -5,7 +5,7 @@ echo 'Content-type: text/plain'
 
 if [ "${QUERY_STRING}" ==  "{{ item.webhook_key }}" ]; then
   echo "Status: 200 OK"; echo
-  svc -a "/home/{{ ansible_user }}/service/wordpress-update-{{ item.name }}"
+  svc -a "/home/{{ ansible_env.USER }}/service/wordpress-update-{{ item.name }}"
   echo "OK."
 else
   echo "Status: 403 Forbidden"; echo

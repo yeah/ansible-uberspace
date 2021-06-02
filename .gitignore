@@ -1,4 +1,6 @@
 host_vars/*
 public_keys/*
-uberspaces
-uberspaces.yml
+/*.yml
+!/uberspaces.example
+!/uberspaces.yml.example
+!/site.yml.example

@@ -1,0 +1,7 @@
+---
+
+- name: Install wordpress bedrock
+  include_tasks: install.yml
+  with_items: "{{ instances }}"
+  loop_control:
+    loop_var: instance
