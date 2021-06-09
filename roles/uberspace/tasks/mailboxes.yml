@@ -1,0 +1,53 @@
+---
+- name: Gather facts
+  block:
+    - name: Gather existing mailboxes
+      command:
+        cmd: uberspace mail user list
+      changed_when: false
+      register: _existing_boxes
+
+    - name: Gather catchall
+      command:
+        cmd: uberspace mail catchall status
+      changed_when: false
+      register: _catchall
+
+
+- name: "Generate new passwords"
+  set_fact:
+    mail: "{{ mail | combine({'boxes': mail['boxes'] | normalize_mailboxes}) }}"
+
+- name: Create new mailboxes
+  command:
+    cmd: "uberspace mail user add --password {{ item.password }} {{ item.name }}"
+  register: _password
+  failed_when: ("ERROR:" in _password.stdout)
+  with_items: "{{ mail.boxes | difference(_existing_boxes.stdout_lines) }}"
+
+- name: Check currently set forward
+  command:
+    cmd: "uberspace mail user forward list {{ item.name }}"
+  register: item._current
+  when: item.name in _existing_boxes.stdout_lines
+  with_items: "{{ mail.forwards }}"
+
+- name: Set forwards
+  command:
+    cmd: "uberspace mail user forward set {{ item.name }} {{ item.target }}"
+  register: _set_forward
+  changed_when: item._current is defined and item.target != item._current.stdout_lines[0]
+  failed_when: ("ERROR:" in _set_forward.stdout)
+  with_items: "{{ mail.forwards }}"
+
+- name: Set catchall
+  command:
+    cmd: "uberspace mail catchall set {{ mail.catchall }}"
+  changed_when: mail.catchall != _catchall.stdout
+  when: mail.catchall is defined and mail.catchall is not false
+
+- name: Unset catchall
+  command:
+    cmd: uberspace mail catchall del
+  changed_when: ("No catchall configured." not in _catchall.stdout_lines)
+  when: mail.catchall is defined and mail.catchall is false
