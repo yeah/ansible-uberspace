@@ -35,6 +35,12 @@
           catchall: admin
         report_new_mail_passwords: true
 
+    - role: uberspace_mail_pw_reset
+      vars:
+        mail_domain: example.com
+        blacklisted_mailboxes:
+          - admin
+
     - role: uberspace_wordpress_bedrock
       vars:
         instances:

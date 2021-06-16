@@ -1,0 +1,5 @@
+---
+- name: Restart flask application
+  community.general.supervisorctl:
+    name: uberspace_mail_pw_reset_flask
+    state: restarted
