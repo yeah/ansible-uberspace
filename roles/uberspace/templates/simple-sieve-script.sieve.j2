@@ -1,0 +1,102 @@
+# {{ ansible_managed }}
+
+{% macro get_required(rules) -%}
+{%- if list_required(rules).split(',') | difference(['']) | length > 0 -%}
+require [{{ [] | union(list_required(rules).split(',')) | difference(['']) | join(",") }}];
+{% endif -%}
+{%- endmacro -%}
+
+{%- macro list_required(rules) -%}
+{%- for rule in rules -%}
+
+{%- if 'if' in rule or 'elif' in rule or 'elsif' in rule or 'elseif' in rule -%}
+{%- if (rule.if|default(rule.elif)|default(rule.elsif)|default(rule.elseif)).startswith('envelope ') -%}
+"envelope",
+{%- endif -%}
+{%- if ' :comparator ' in rule.if|default(rule.elif)|default(rule.elsif)|default(rule.elseif) -%}
+  {%- if rule.if|default(rule.elif)|default(rule.elsif)|default(rule.elseif) | regex_findall(' :comparator "([^"]+)" ')|first not in ["i;octet", "i;ascii-casemap"] -%}
+"comparator-{{ rule.if|default(rule.elif)|default(rule.elsif)|default(rule.elseif) | regex_findall(' :comparator "([^"]+)" ')|first }}",
+  {%- endif -%}
+{%- endif -%}
+{%- if ' :value ' in rule.if|default(rule.elif)|default(rule.elsif)|default(rule.elseif) -%}
+"relational",
+{%- endif -%}
+{%- if (rule.if|default(rule.elif)|default(rule.elsif)|default(rule.elseif)).startswith('spamtest ') -%}
+"spamtestplus",
+{%- endif -%}
+{%- if (rule.if|default(rule.elif)|default(rule.elsif)|default(rule.elseif)).startswith('virustest ') -%}
+"virustest",
+{%- endif -%}
+{%- if ' :detail ' in rule.if|default(rule.elif)|default(rule.elsif)|default(rule.elseif) -%}
+"subaddress",
+{%- endif -%}
+{%- if ' :regex ' in rule.if|default(rule.elif)|default(rule.elsif)|default(rule.elseif) -%}
+"regex",
+{%- endif -%}
+{{ list_required(rule.block) }}
+
+{%- elif 'else' in rule -%}
+{{ list_required(rule.block) }}
+
+{%- elif 'reject' in rule -%}
+"reject",
+{%- elif 'fileinto' in rule -%}
+"fileinto",
+{%- elif 'setflag' in rule -%}
+"imap4flags",
+{%- elif 'vacation' in rule -%}
+"vacation",
+
+{%- endif -%}
+{%- endfor -%}
+{%- endmacro -%}
+
+
+{%- macro indent(n) -%}
+{{ '  '*n }}
+{%- endmacro -%}
+
+{%- macro makerules(rules, ind) -%}
+{%- for subrule in rules -%}
+{{ makerule(subrule, ind) }}
+{%- endfor -%}
+{%- endmacro -%}
+
+{%- macro makerule(rule, ind) -%}
+
+{% if 'if' in rule %}
+
+{{ indent(ind) }}if {{ rule.if }} {
+{{ makerules(rule.block, ind+1) }}{{ indent(ind) }}}
+
+{% elif 'elif' in rule or 'elsif' in rule or 'elseif' in rule %}
+{{ indent(ind) }}elsif {{ rule.elif|default(rule.elsif)|default(rule.elseif) }} {
+{{ makerules(rule.block, n+1) }}{{ indent(ind) }}}
+
+{% elif 'else' in rule %}
+{{ indent(ind) }}else {{ rule.else }} {
+{{ makerules(rule.block, ind+1) }}{{ indent(ind) }}}
+
+{% elif 'reject' in rule -%}
+{{ indent(ind) }}reject "{{ rule.reject }}";
+{% elif 'redirect' in rule -%}
+{{ indent(ind) }}redirect "{{ rule.redirect }}";
+{% elif 'keep' in rule -%}
+{{ indent(ind) }}keep;
+{% elif 'discard' in rule -%}
+{{ indent(ind) }}discard;
+{% elif 'fileinto' in rule -%}
+{{ indent(ind) }}fileinto "{{ rule.fileinto }}";
+{% elif 'setflag' in rule -%}
+{{ indent(ind) }}setflag "{{ rule.setflag }}";
+{% elif 'vacation' in rule -%}
+{{ indent(ind) }}setflag "{{ rule.vacation }}";
+{% elif 'stop' in rule -%}
+{{ indent(ind) }}stop;
+{% endif -%}
+
+{%- endmacro -%}
+
+
+{{ get_required(item.simple_rules) }}
+{{ makerules(item.simple_rules, 0) }}

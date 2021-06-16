@@ -1,0 +1,41 @@
+- block:
+    - name: Create sieve directory
+      file:
+        path: ~/users/{{ item['name'] }}/sieve
+        state: directory
+
+    - name: Set sieve script
+      template:
+        src: simple-sieve-script.sieve.j2
+        dest: ~/users/{{ item['name'] }}/sieve/ansible-managed.sieve.test
+
+    - name: Check sieve script validity
+      command:
+        cmd: sievec ~/users/{{ item['name'] }}/sieve/ansible-managed.sieve.test
+      changed_when: false
+
+    - name: Copy tested script over
+      copy:
+        src: ~/users/{{ item['name'] }}/sieve/ansible-managed.sieve.test
+        dest: ~/users/{{ item['name'] }}/sieve/ansible-managed.sieve
+        remote_src: true
+
+    - name: Activate sieve script
+      file:
+        src: ~/users/{{ item['name'] }}/sieve/ansible-managed.sieve
+        dest: ~/users/{{ item['name'] }}/.dovecot.sieve
+        state: link
+  when: ('simple_rules' in item and item.simple_rules is not none)
+
+- block:
+    - name: Check active script
+      stat:
+        path: ~/users/{{ item['name'] }}/.dovecot.sieve
+      register: _active_script
+
+    - name: Deactivate sieve script
+      file:
+        path: ~/users/{{ item['name'] }}/.dovecot.sieve
+        state: absent
+      when: _active_script.stat.exists and _active_script.stat.islnk and _active_script.stat.lnk_target.endswith('/ansible-managed.sieve')
+  when: ('simple_rules' not in item or item.simple_rules is none)

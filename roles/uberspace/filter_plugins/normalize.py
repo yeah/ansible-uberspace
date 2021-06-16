@@ -30,7 +30,6 @@ class FilterModule(object):
             {{ "%s - %s"|format("Hello?", "Foo!") }}
                 -> Hello? - Foo!
         """
-        print('normalize_item_to_dict({}, {}, {})'.format(item, default_key, additional_keys))
         out = dict()
         attrs = additional_keys or []
 
@@ -57,4 +56,4 @@ class FilterModule(object):
         return out
 
     def normalize_mailboxes(self, items: Iterable[Union[str,tuple[str,Any]]], password_spec='/dev/null chars=ascii_letters,digits,.:;-_$%&=# length=16'):
-        return self.normalize_items_to_dicts(items, 'name', [('password', lambda: self.pw.run([password_spec], [])[0])])
+        return self.normalize_items_to_dicts(items, 'name', [('password', lambda: self.pw.run([password_spec], [])[0]), ('simple_rules', None)])

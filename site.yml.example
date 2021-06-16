@@ -17,6 +17,24 @@
           - name: blog.example.com
             web: true
             link: true
+        mail:
+          boxes:
+            - name: admin
+              password: VeryComplicatedPassw0rd
+              simple_rules:
+                - if: header :value "ge" :comparator "i;ascii-numeric" "X-Rspamd-Score" "4"
+                  block:
+                    - fileinto: "Spam"
+                    - stop:
+            - hello
+          forwards:
+            - name: hallo
+              target: hello@example.com
+            - name: my_dad
+              target: dad@other.com
+          catchall: admin
+        report_new_mail_passwords: true
+
     - role: uberspace_wordpress_bedrock
       vars:
         instances:

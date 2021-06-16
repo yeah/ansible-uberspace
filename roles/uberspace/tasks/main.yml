@@ -33,3 +33,6 @@
   include_tasks: domains.yml
   with_items: "{{ domains }}"
   when: domains is defined
+
+- name: Set up mailboxes
+  include_tasks: mailboxes.yml

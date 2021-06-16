@@ -14,40 +14,56 @@
       register: _catchall
 
 
-- name: "Generate new passwords"
+- name: Generate new passwords
   set_fact:
     mail: "{{ mail | combine({'boxes': mail['boxes'] | normalize_mailboxes}) }}"
+
+- name: Enable the spamfolder
+  command:
+    cmd: uberspace mail spamfolder enable
+  register: _spamfolder
+  changed_when: ('already' not in _spamfolder.stdout)
+  failed_when: _spamfolder.rc != 0 and 'The spam folder is already enabled.' not in _spamfolder.stdout_lines
 
 - name: Create new mailboxes
   command:
     cmd: "uberspace mail user add --password {{ item.password }} {{ item.name }}"
-  register: _password
-  failed_when: ("ERROR:" in _password.stdout)
-  with_items: "{{ mail.boxes | difference(_existing_boxes.stdout_lines) }}"
+  register: mail_passwords
+  changed_when: ("ERROR:" not in mail_passwords.stderr)
+  failed_when: ("ERROR:" in mail_passwords.stderr and "already exists." not in mail_passwords.stderr)
+  when: item.name not in _existing_boxes.stdout_lines
+  with_list: "{{ mail.boxes }}"
+  notify: Report new mail passwords
 
 - name: Check currently set forward
   command:
     cmd: "uberspace mail user forward list {{ item.name }}"
-  register: item._current
-  when: item.name in _existing_boxes.stdout_lines
-  with_items: "{{ mail.forwards }}"
+  register: _current
+  changed_when: false
+  failed_when: false
+  with_list: "{{ mail.forwards }}"
 
 - name: Set forwards
   command:
-    cmd: "uberspace mail user forward set {{ item.name }} {{ item.target }}"
+    cmd: "uberspace mail user forward set {{ item[0].name }} {{ item[0].target }}"
   register: _set_forward
-  changed_when: item._current is defined and item.target != item._current.stdout_lines[0]
+  changed_when: item[1] is defined and item[0].target != item[1].stdout_lines[0]
   failed_when: ("ERROR:" in _set_forward.stdout)
-  with_items: "{{ mail.forwards }}"
+  when: item[1] is not defined or item[0].target != item[1].stdout_lines[0]
+  with_list: "{{ mail.forwards | zip(_current.results) }}"
 
 - name: Set catchall
   command:
     cmd: "uberspace mail catchall set {{ mail.catchall }}"
   changed_when: mail.catchall != _catchall.stdout
-  when: mail.catchall is defined and mail.catchall is not false
+  when: mail.catchall is defined and mail.catchall is not false and mail.catchall != _catchall.stdout
 
 - name: Unset catchall
   command:
     cmd: uberspace mail catchall del
   changed_when: ("No catchall configured." not in _catchall.stdout_lines)
   when: mail.catchall is defined and mail.catchall is false
+
+- name: Set mail rules
+  include_tasks: sieve.yml
+  with_list: "{{ mail.boxes }}"
