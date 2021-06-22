@@ -11,7 +11,9 @@
   pip:
     requirements: "{{ project_path }}/requirements.txt"
     virtualenv: "{{ project_path }}"
-    virtualenv_command: /usr/bin/python3.6 -m venv
+    virtualenv_command: /usr/bin/python3.9 -m venv
+  environment:
+    CPATH: /usr/include/python3.9
   notify: Restart flask application
 
 - name: Create env file
@@ -19,7 +21,7 @@
     src: env.j2
     dest: "{{ project_path }}/.env"
   vars:
-    secret_key: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,hexdigits,punctuation length=16') }}"
+    secret_key: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,hexdigits,punctuation length=64') }}"
   notify: Restart flask application
 
 - name: Template uwsgi.ini
