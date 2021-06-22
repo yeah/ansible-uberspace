@@ -16,7 +16,7 @@
 
 - name: Generate new passwords
   set_fact:
-    mail: "{{ mail | combine({'boxes': mail['boxes'] | normalize_mailboxes}) }}"
+    mail: "{{ mail | combine({'boxes': mail['boxes']|default([]) | normalize_mailboxes}) }}"
 
 - name: Enable the spamfolder
   command:
@@ -32,7 +32,7 @@
   changed_when: ("ERROR:" not in mail_passwords.stderr)
   failed_when: ("ERROR:" in mail_passwords.stderr and "already exists." not in mail_passwords.stderr)
   when: item.name not in _existing_boxes.stdout_lines
-  with_list: "{{ mail.boxes }}"
+  with_list: "{{ mail.boxes|default([]) }}"
   notify: Report new mail passwords
 
 - name: Check currently set forward
@@ -41,7 +41,7 @@
   register: _current
   changed_when: false
   failed_when: false
-  with_list: "{{ mail.forwards }}"
+  with_list: "{{ mail.forwards|default([]) }}"
 
 - name: Set forwards
   command:
@@ -50,7 +50,7 @@
   changed_when: item[1] is defined and item[0].target != item[1].stdout_lines[0]
   failed_when: ("ERROR:" in _set_forward.stdout)
   when: item[1] is not defined or item[0].target != item[1].stdout_lines[0]
-  with_list: "{{ mail.forwards | zip(_current.results) }}"
+  with_list: "{{ mail.forwards|default([]) | zip(_current.results) }}"
 
 - name: Set catchall
   command:
@@ -66,4 +66,4 @@
 
 - name: Set mail rules
   include_tasks: sieve.yml
-  with_list: "{{ mail.boxes }}"
+  with_list: "{{ mail.boxes|default([]) }}"
