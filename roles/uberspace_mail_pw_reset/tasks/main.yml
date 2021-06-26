@@ -5,7 +5,9 @@
     dest: "{{ project_path }}"
     force: true
     version: "{{ git_version }}"
-  notify: Restart flask application
+  notify:
+    - Build translations
+    - Restart flask application
 
 - name: Create venv
   pip:
