@@ -1,7 +1,7 @@
 #!/bin/sh
 # {{ ansible_managed }}
 
-cd "/var/www/virtual/{{ ansible_user }}/wordpress/$1"
+cd "/var/www/virtual/{{ ansible_env.USER }}/wordpress/$1"
 git fetch origin
 git reset --hard --quiet origin/master
 ~/bin/composer -q -n update

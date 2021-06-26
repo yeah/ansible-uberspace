@@ -1,0 +1,10 @@
+---
+project_path: "/home/{{ ansible_env.USER }}/mail_pw_reset"
+mail_domain: example.com
+
+server_name: "{{ ansible_env.USER }}.uber.space"
+backend_entrypoint: /mail_reset
+backend_port: 1024
+
+git_repo: 'https://github.com/PeterNerlich/uberspace_mail_pw_reset.git'
+git_version: master

@@ -1,0 +1,12 @@
+---
+- name: Report DNS entries
+  debug:
+    msg: "{{ web_domains | default([]) | combine(mail_domains | default([]), recursive=true) }}"
+  listen: Report DNS entries
+
+- name: Report new mail passwords
+  debug:
+    #msg: "{{ mail_passwords | default([]) }}"
+    msg: "{{ mail_passwords.results | selectattr('changed') | map(attribute='item') }}"
+  when: report_new_mail_passwords
+  listen: Report new mail passwords

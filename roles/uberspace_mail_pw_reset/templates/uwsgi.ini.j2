@@ -1,0 +1,9 @@
+[uwsgi]
+mount = {{ backend_entrypoint }}=main:app
+manage-script-name = true
+pidfile = uberspace_mail_pw_reset.pid
+master = true
+processes = 1
+http-socket = :{{ backend_port }}
+chmod-socket = 660
+vacuum = true

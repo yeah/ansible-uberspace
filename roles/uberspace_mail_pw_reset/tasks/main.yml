@@ -1,0 +1,55 @@
+---
+- name: Fetch flask project
+  ansible.builtin.git:
+    repo: "{{ git_repo }}"
+    dest: "{{ project_path }}"
+    force: true
+    version: "{{ git_version }}"
+  notify:
+    - Build translations
+    - Restart flask application
+
+- name: Create venv
+  pip:
+    requirements: "{{ project_path }}/requirements.txt"
+    virtualenv: "{{ project_path }}"
+    virtualenv_command: /usr/bin/python3.9 -m venv
+  environment:
+    CPATH: /usr/include/python3.9
+  notify: Restart flask application
+
+- name: Create env file
+  template:
+    src: env.j2
+    dest: "{{ project_path }}/.env"
+  vars:
+    secret_key: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,hexdigits,punctuation length=64') }}"
+  notify: Restart flask application
+
+- name: Template uwsgi.ini
+  template:
+    src: uwsgi.ini.j2
+    dest: "{{ project_path }}/uwsgi.ini"
+  notify: Restart flask application
+
+- name: Template flask.ini
+  template:
+    src: flask.ini.j2
+    dest: ~/etc/services.d/uberspace_mail_pw_reset_flask.ini
+  notify: Restart flask application
+
+- name: Start application
+  community.general.supervisorctl:
+    name: uberspace_mail_pw_reset_flask
+    state: started
+
+- name: Set backend
+  command: "uberspace web backend set {{ backend_entrypoint }} --http --port {{ backend_port }}"
+  register: backend
+  failed_when: backend.rc == 1 and not backend.stdout.startswith("Set backend for ")
+  changed_when: backend.stdout.startswith("Set backend for ")
+  when:
+    - backend_entrypoint not in ansible_facts.ansible_local.users[ansible_env.USER].global_backends
+    - ansible_facts.ansible_local.users[ansible_env.USER].global_backends[backend_entrypoint].port != backend_port
+    - ansible_facts.ansible_local.users[ansible_env.USER].global_backends[backend_entrypoint].remove_prefix != false
+    - ansible_facts.ansible_local.users[ansible_env.USER].global_backends[backend_entrypoint].transport != 'http'

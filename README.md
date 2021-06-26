@@ -2,13 +2,10 @@
 
 This playbook helps you set up and manage your Uberspace(s).
 
-It configures a few common things that I find essential for Uberspaces and it is extensible for other stuff.
-
 ## Current features
 
-- [Let's Encrypt SSL certificates](https://wiki.uberspace.de/webserver:https#let_s-encrypt-zertifikate)
-- [WordPress](https://wordpress.org/) using the awesome [Bedrock](https://roots.io/bedrock/) boilerplate
-- [Ruby on Rails](http://rubyonrails.org/) apps
+- Registering domains for web and mail, and optionally symlinking docroot to the home directory
+- [WordPress](https://wordpress.org/) using the [Bedrock](https://roots.io/bedrock/) boilerplate
 
 ## Requirements
 
@@ -18,24 +15,9 @@ It configures a few common things that I find essential for Uberspaces and it is
 ## Usage
 
 1. Copy `uberspaces.example` to `uberspaces` and add your Uberspace host(s) and username(s)
-2. Copy `host_vars/UBERSPACE_NAME.UBERSPACE_HOST.uberspace.de.example` to a new file named without the `.example` suffix and replace `UBERSPACE_NAME` with your username, e.g. `julia` and `UBERSPACE_HOST` with your Uberspace host, e.g. `eridanus`.
-3. Add the domains you'd like to run on the respective Uberspace to the file created in step 2.
-4. Repeat steps 2 and 3 for all your Uberspaces.
-5. Run the playbook using `ansible-playbook --ask-pass site.yml`.
-6. Enjoy!
-
-If you have an SSH keypair and your public key is installed in `~/.ssh/id_rsa.pub` on your local computer, the key will be stored in `~/.ssh/authorized_keys` on your Uberspace and you won't need the `--ask-pass` argument in subsequent runs.
-
-### Let's Encrypt
-
-Nothing to do or configure here. This works automagically for all your domains.
-
-### WordPress
-
-1. To set up a WordPress instance, simply create an entry under `wordpress_instances` in your `host_vars` file (see `host_vars/UBERSPACE_NAME.UBERSPACE_HOST.uberspace.de.example` for an example)
-2. Use the default `bedrock_repo` from `https://github.com/yeah/bedrock.git` or use your own forked repo of the boilerplate (Your Uberspace's public keys will be conveniently downloaded for you to `public_keys/` so you can use them as deploy keys for your private Git repos.)
-3. Add the domains through which your WordPress should be accessible
-4. Make sure to add these domains to the top-level `domains` section in the `host_vars` file as well!
+2. Copy `site.yml.example` to `site.yml` or any other playbook name you want and start adapting it to your needs
+3. The `uberspace` role handles uploading local ssh keys, generating a key for the managed machine and registering domains for web or mail against the uberspace host with an optional symlink to home
+4. The `uberspace_wordpress_bedrock` role installs wordpress bedrock, creating the database for it and linking the docroot of the instance to the specified entry points
 
 #### Bonus: Deploy hooks
 
@@ -58,88 +40,6 @@ curl -s 'https://julia.eridanus.uberspace.de/cgi-bin/wordpress-update-example_bl
 
 Or if you use [Planio](https://plan.io), simply enter your URL via **Settings** &rarr; **Repositories** &rarr; *your repo* &rarr; **Edit** &rarr; **Post-Receive webhook URL**
 
-### Ruby on Rails apps
-
-Setting up and deploying your Ruby on Rails apps involves a little bit more work, but it's definitely worth it. Where else do you get such awesome Rails hosting for the price? Let's get started:
-
-#### Configure your playbook
-
-1. To set up a Rails app, create an entry under `rails_apps` in your `host_vars` file (see `host_vars/UBERSPACE_NAME.UBERSPACE_HOST.uberspace.de.example` for an example)
-2. Make sure to give it a `name` which should be only characters, numbers and maybe the underscore character – no spaces!
-3. Add the domains through which your Rails app should be accessible
-4. Make sure to add these domains to the top-level `domains` section in the `host_vars` file as well!
-5. For `secret_key_base` generate a secret using `rake secret` in your Rails app
-6. For `port` choose an unused port on your Uberspace between 32000 and 65000
-
-That's it for Ansible. You can now run your playbook using `ansible-playbook site.yml`.
-
-#### Configure your Rails app
-
-To actually deploy your app, we're going to use [Capistrano](http://capistranorb.com/). Git clone your Rails app on your local computer and perform the following modifications:
-
-##### Modify your `Gemfile`
-
-1. Add or uncomment `gem 'capistrano-rails', group: :development`
-2. Run `bundle install` and then `bundle exec cap install`
-
-##### Mofify your `Capfile`
-
-1. Add or uncomment `require 'capistrano/bundler'`
-2. Add or uncomment `require 'capistrano/rails/migrations'` if your app is using MySQL
-
-Your `Capfile` should now look similar to this:
-
-```ruby
-require "capistrano/setup"
-require "capistrano/deploy"
-require 'capistrano/bundler'
-require 'capistrano/rails/migrations'
-
-Dir.glob("lib/capistrano/tasks/*.rake").each { |r| import r }
-```
-
-###### Modify your `config/deploy.rb`
-
-1. Find the line `set :application, 'my_app_name'` and replace `my_app_name` with the *exact same* name you chose earlier for the `rails_apps` entry in your `host_vars` file.  
-2. Find the line `set :repo_url, 'git@example.com:me/my_repo.git'` and add your Rails app's repo URL. If your repo is private, please add the keys you find in `public_keys/` within your playbook as deploy keys to your repository hoster.
-3. Find the line `# set :deploy_to, '/var/www/my_app_name'`, uncomment it and set the value to `"~/www/rails/#{fetch :application}"` (notice the double quotes!)
-4. Add the line `set :linked_files, fetch(:linked_files, []).push('config/database.yml')`
-5. Add the line `after :publishing, :restart { execute :svc, "-du ~/service/rails-app-#{fetch :application}" }` within the `namespace :deploy` block
-
-Your `config/deploy.rb` should now look similar to this:
-
-```ruby
-lock '3.5.0'
-
-set :application, 'example_app'
-set :repo_url, 'git@example.plan.io:example-app.git'
-set :deploy_to, "~/www/rails/#{fetch :application}"
-set :linked_files, fetch(:linked_files, []).push('config/database.yml')
-
-namespace :deploy do
-  after :publishing, :restart { execute :svc, "-du ~/service/rails-app-#{fetch :application}" }
-end
-```
-
-
-##### Modify your `config/deploy/production.rb`
-
-1. Find and uncomment the line `# server 'example.com', user: 'deploy', roles: %w{app db web}, my_property: :my_value` and replace `example.com` with the hostname of your Uberspace, e.g. `eridanus.uberspace.de` and `deploy` with your Uberspace username.
-
-Your `config/deploy/production.rb` should now look similar to this:
-
-```ruby
-server 'eridanus.uberspace.de', user: 'julia', roles: %w{app db web}
-```
-
-That's it. You should be able to deploy your app using `bundle exec cap production deploy`. After some time, your Rails app should be humming nicely on your configured domain.
-
-### Cleanup
-
-As the Uberspace Playbook is still in development, it would make sense for you to run the cleanup tasks after every update from this repo. The cleanup tasks remove any files/configurations on your Uberspace which previous versions of the playbook may have installed but which are no longer needed. You can run the cleanup tasks like so:
-
-`ansible-playbook cleanup.yml`
-
 ## License
 
 MIT.
@@ -150,4 +50,6 @@ To contribute something you usually configure on your Uberspace, please fork thi
 
 ## Credits
 
-[I](http://jan.sh) built this. By myself. On my computer.
+[Jan](http://jan.sh) built this. By himself. On his computer.
+
+Then U7 came along with breaking changes and Peter Nerlich eventually tried to rewrite this for the new version. Though in the process, he self righteously changed stuff he deemed weird and removed some features he didn't use himself, completely destroying any backwards compatibility.

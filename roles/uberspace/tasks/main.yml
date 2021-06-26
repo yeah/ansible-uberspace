@@ -1,0 +1,38 @@
+---
+- name: Upload local public key
+  authorized_key:
+    user: "{{ ansible_env.USER }}"
+    key: "{{ item }}"
+  with_items: "{{ upload_ssh_keys }}"
+  when: upload_ssh_keys is defined and upload_ssh_keys
+
+- name: Generate SSH key pair for remote user on Uberspace
+  user:
+    name: "{{ ansible_env.USER }}"
+    generate_ssh_key: yes
+    ssh_key_bits: 4096
+    ssh_key_file: .ssh/id_rsa
+  when: generate_ssh_key
+
+#- name: Fetch remote user's public key (e.g. for Git access)
+#  fetch:
+#    src: ~/.ssh/id_rsa.pub
+#    dest: "public_keys/{{ ansible_host }}"
+#    flat: yes
+
+#- name: Configure Git
+#  template:
+#    src: templates/gitconfig.j2
+#    dest: ~/.gitconfig
+
+- name: "Already registered domains:"
+  debug:
+    msg: "{{ ansible_facts.ansible_local.users[ansible_env.USER].domains }}"
+
+- name: Add domains
+  include_tasks: domains.yml
+  with_items: "{{ domains }}"
+  when: domains is defined
+
+- name: Set up mailboxes
+  include_tasks: mailboxes.yml

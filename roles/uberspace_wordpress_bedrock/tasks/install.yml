@@ -1,0 +1,185 @@
+---
+- name: Determine docroot
+  set_fact:
+    _determined_docroot: "{{ instance.docroot | default(default_root) }}"
+  vars:
+    default_root: "/var/www/virtual/{{ ansible_env.USER }}/wordpress/{{ instance.name }}"
+
+- name: Create PyMySQL venv
+  pip:
+    name:
+      - PyMySQL
+    virtualenv: ~/.pymysql
+    virtualenv_command: /usr/bin/python3 -m venv
+
+- name: Read .my.cnf
+  block:
+    - name: Create temporary local file
+      local_action:
+        module: tempfile
+        state: directory
+      register: mycnf_dir
+      changed_when: false
+
+    - name: Retrieve .my.cnf
+      fetch:
+        src: ~/.my.cnf
+        dest: "{{ mycnf_dir.path }}"
+      register: mycnf
+      changed_when: false
+
+
+- name: Download WP-CLI
+  block:
+    - name: Get SHA512 checksum
+      get_url:
+        url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar.sha512
+        dest: ~/tmp/wp-cli.phar.sha512
+
+    - name: Read SHA512 checksum
+      slurp:
+        src: ~/tmp/wp-cli.phar.sha512
+      register: checksum
+
+    - name: Download WP-CLI
+      get_url:
+        url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        dest: ~/bin/wp
+        checksum: "sha512:{{ checksum.content | b64decode }}"
+
+
+- name: Make WP-CLI executable
+  file:
+    path: ~/bin/wp
+    mode: ugo+x
+
+- name: Install some WP-CLI packages
+  command:
+    cmd: "~/bin/wp package install {{ item }}"
+    creates: "~/.wp-cli/packages/vendor/{{ item }}"
+  register: install_packages
+  changed_when: ("Nothing to install, update or remove" not in install_packages.stdout_lines)
+  with_items:
+    - aaemnnosttv/wp-cli-dotenv-command:^0.2
+
+- name: Create cron job for ~/bin/wp cli update
+  cron:
+    name: WP-CLI self-update
+    job: ~/bin/wp cli update --yes --quiet
+    special_time: daily
+
+
+#- name: Clone fresh Bedrock (WordPress boilerplate)
+#  git:
+#    repo: "{{ instance.bedrock_repo | default('https://github.com/yeah/bedrock.git') }}"
+#    dest: "{{ _determined_docroot }}"
+#    version: "{{ instance.bedrock_version | default('master') }}"
+#    force: yes
+
+- name: Check if project already exists
+  stat:
+    path: "{{ _determined_docroot }}/composer.json"
+  register: composer_json
+
+- name: Ensure project dir is created
+  file:
+    path: "{{ _determined_docroot }}"
+    state: directory
+  when: not composer_json.stat.exists
+
+- name: Install wordpress bedrock
+  composer:
+    command: create-project
+    arguments: "roots/bedrock {{ _determined_docroot }}"
+    working_dir: "{{ _determined_docroot }}"
+  when: not composer_json.stat.exists
+
+- name: Create MySQL database
+  mysql_db:
+    name: "{{ ansible_env.USER }}_{{ instance.name }}"
+    collation: utf8_unicode_ci
+    encoding: utf8
+    state: present
+  vars:
+    ansible_python_interpreter: ~/.pymysql/bin/python3
+
+- name: Create .env template with salts
+  command:
+    cmd: ~/bin/wp dotenv init --with-salts
+    chdir: "{{ _determined_docroot }}"
+  #ignore_errors: yes
+  register: result
+  failed_when: ('Environment file already exists' in result.stdout)
+  changed_when: "'already exists' not in result.stdout"
+
+- name: Set environment variables in .env
+  command:
+    cmd: "~/bin/wp dotenv set {{ item.key }} {{ item.val }}"
+    chdir: "{{ _determined_docroot }}"
+  with_items:
+    - key: "DB_NAME"
+      val: "{{ ansible_env.USER }}_{{ instance.name }}"
+    - key: "DB_USER"
+      val: "{{ lookup('ini', 'user section=client file=' + mycnf.dest) }}"
+    - key: "DB_PASSWORD"
+      val: "{{ lookup('ini', 'password section=client file=' + mycnf.dest) }}"
+    - key: "WP_ENV"
+      #val: "production"
+      val: "development"
+    - key: "WP_HOME"
+      val: "https://{{ instance.entry_points[0] }}"
+    - key: "WP_SITEURL"
+      val: "https://{{ instance.entry_points[0] }}/wp"
+
+
+#- name: Create script ~/bin/wordpress-update
+#  template:
+#    src: templates/wordpress-update.j2
+#    dest: ~/bin/wordpress-update
+#    mode: ugo+x
+#
+#- name: Create runwhen jobs for ~/bin/wordpress-update
+#  command:
+#    cmd: "runwhen-conf ~/etc/run-wordpress-update-{{ instance.name }} ~/bin/wordpress-update {{ instance.name }}"
+#    creates: "~/etc/run-wordpress-update-{{ instance.name }}/run"
+#
+#- name: Configure runwhen jobs for ~/bin/wordpress-update
+#  lineinfile:
+#    dest: ~/etc/run-wordpress-update-{{ instance.name }}/run
+#    regexp: "^RUNWHEN="
+#    line: "RUNWHEN=\",H=1\""
+#
+#- name: Activate runwhen jobs for ~/bin/wordpress-update
+#  file:
+#    path: "~/service/wordpress-update-{{ instance.name }}"
+#    src: "~/etc/run-wordpress-update-{{ instance.name }}"
+#    state: link
+#
+#- name: Run wordpress-update for the first time
+#  command: "svc -a ~/service/wordpress-update-{{ instance.name }}"
+#
+#
+#- name: Create webhook for WordPress updates
+#  template:
+#    src: templates/wordpress-update.cgi.j2
+#    dest: "~/cgi-bin/wordpress-update-{{ instance.name }}.cgi"
+#    mode: 0755
+#  when: "{{ instance.webhook_key is defined }}"
+
+
+- name: Set up .htaccess to redirect all traffic to main domain
+  blockinfile:
+    dest: "{{ _determined_docroot }}/web/.htaccess"
+    create: yes
+    insertbefore: BOF
+    block: |
+      RewriteEngine On
+      RewriteCond %{HTTP_HOST} !={{ instance.entry_points[0] | regex_replace('/.*') }}
+      RewriteRule (.*) https://{{ instance.entry_points[0] | regex_replace('/.*') }}/$1 [R=301,L]
+
+- name: Create domain symlinks
+  file:
+    path: "/var/www/virtual/{{ ansible_env.USER }}/{{ item }}"
+    src: "{{ _determined_docroot }}/web"
+    state: link
+  with_items: "{{ instance.entry_points }}"

@@ -1,0 +1,10 @@
+---
+- name: Build translations
+  ansible.builtin.command:
+    cmd: "{{ project_path }}/update_and_build_translations.sh"
+    chdir: "{{ project_path }}"
+
+- name: Restart flask application
+  community.general.supervisorctl:
+    name: uberspace_mail_pw_reset_flask
+    state: restarted
